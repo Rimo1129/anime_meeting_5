@@ -1,0 +1,177 @@
+<!DOCTYPE html>
+<html lang="ja">
+
+<head>
+    <meta charset="UTF-8">
+    <script src="https://cdn.jsdelivr.net/npm/three@0.116.1/build/three.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/three@0.116.1/examples/js/loaders/GLTFLoader.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@pixiv/three-vrm@0.3.5/lib/three-vrm.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@tensorflow-models/facemesh"></script>
+    <script src="test.js"></script>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@5.6.3/css/all.min.css">
+    <title>顔認証テスト</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <script src="https://cdn.webrtc.ecl.ntt.com/skyway-latest.js"></script>
+</head>
+
+<body>
+    顔認証テスト
+    <p><button onclick="start()">start</button></p>
+    <style>
+        @media screen and (min-width: 644px) {
+            .oneline {
+                width: 966px;
+            }
+        }
+    </style>
+        <!-- <p><video id="my-video" width="400px" autoplay muted playsinline></video></p> -->
+        <p id="my-id"></p>
+        <input type="text" placeholder="Join room..." id="js-room-id">
+        <button id="js-join-trigger">Join</button>
+        <button id="js-leave-trigger">Leave</button>
+        <pre class="messages" id="js-messages"></pre>
+        <!-- <textarea id="their-id"></textarea> -->
+        <!-- <button id="make-call">発信</button><br> -->
+        <video id="their-video" width="320px" autoplay muted playsinline></video>
+        <div id="js-videos-container" class="videos-container">
+            <span id="vrm_parent"
+        style="border:solid 1px black;width:320px;height:240px;overflow:hidden;box-sizing:content-box; display:inline-block;"></span>
+        </div>
+    <div class="oneline">
+        <video id='input' width="320" height="240" autoplay muted playsinline
+            style="border:solid 1px black;box-sizing:content-box;display:inline-block;"></video>
+
+        <span style="position:relative;display:inline-block;">
+            <canvas id='output' width="320" height="240" style="border:solid 1px black;box-sizing:content-box;"></canvas>
+            <span id='loadingicon' class="fa fa-spinner fa-spin"
+                style="position:absolute;font-size:100px;top:70px;left: 110px;display:none;"></span>
+        </span>
+        <p><canvas id = "myCanvas"></canvas></p>
+    </div>
+    <script>
+        const peer = new Peer({
+            key: '5e515941-74d3-43fa-9f00-239bf7559a52',
+            debug: 3
+        });
+
+        peer.on('open', () => {
+            document.getElementById('my-id').textContent = peer.id;
+        });
+
+        let localStream;
+
+        // カメラ映像取得
+        navigator.mediaDevices.getUserMedia({
+            video: true, audio: true
+        })
+            .then(stream => {
+                // 成功時にvideo要素にカメラ映像をセットし、再生
+                const canvas2 = document.getElementById("myCanvas");
+                //const videoElm = document.getElementById('my-video');
+                // canvas2.onplay = function(){
+                //     var streamtest = canvas2.captureStream();
+                //     videoElm.srcObject = streamtest;
+                // };
+                var kasoucamera = canvas2.captureStream(15);
+                
+
+                //videoElm.srcObject = kasoucamera;
+                // 着信時に相手にカメラ映像を返せるように、グローバル変数に保存しておく
+                localStream = kasoucamera;
+            }).catch(error => {
+                // 失敗時にはエラーログを出力
+                console.error('mediaDevice.getUserMedia() error:', error);
+                return;
+            });
+        
+        // 複数人会議
+        // js-local-video→vrm_parent
+        const localVideo = document.getElementById('vrm_parent');
+        // js-local-id→my-id
+   　　　const localId = document.getElementById('my-id');
+        // js-videos-container→
+        const videosContainer = document.getElementById('js-videos-container');
+
+        const roomId = document.getElementById('js-room-id');
+        const messages = document.getElementById('js-messages');
+        const joinTrigger = document.getElementById('js-join-trigger');
+        const leaveTrigger = document.getElementById('js-leave-trigger');
+
+        joinTrigger.addEventListener('click', () => {
+        const room = peer.joinRoom(roomId.value, {
+            mode: 'sfu',
+            stream: localStream,
+        });
+
+        room.on('open', () => {
+            messages.textContent += `===You joined===\n`;
+        });
+
+        room.on('peerJoin', peerId => {
+            messages.textContent += `===${peerId} joined===\n`;
+        });
+
+        room.on('stream', async stream => {
+            const remoteVideo = document.createElement('video');
+            remoteVideo.srcObject = stream;
+            remoteVideo.playsInline = true;
+            remoteVideo.setAttribute('data-peer-id', stream.peerId);
+            videosContainer.append(remoteVideo);
+
+            await remoteVideo.play().catch(console.error);
+        });
+
+        room.on('peerLeave', peerId => {
+            const remoteVideo = videosContainer.querySelector(`[data-peer-id="${peerId}"]`);
+            remoteVideo.srcObject.getTracks().forEach(track => {
+                track.stop();
+            });
+            remoteVideo.srcObject = null;
+            remoteVideo.remove();
+
+            messages.textContent += `===${peerId} left===\n`;
+        });
+
+        room.once('close', () => {
+            messages.textContent += '===You left ===\n';
+            const remoteVideos = videosContainer.querySelectorAll('[data-peer-id]');
+            Array.from(remoteVideos)
+            .forEach(remoteVideo => {
+                remoteVideo.srcObject.getTracks().forEach(track => track.stop());
+                remoteVideo.srcObject = null;
+                remoteVideo.remove();
+              });
+        });
+
+        leaveTrigger.addEventListener('click', () => {
+            room.close();
+        }, { once: true });
+    });
+
+
+        /* /* // 発信処理
+        /* document.getElementById('make-call').onclick = () => {
+            const theirID = document.getElementById('their-id').value;
+            const mediaConnection = peer.call(theirID, localStream);
+            setEventListener(mediaConnection);
+        }; 
+
+        // イベントリスナを設置する関数
+        const setEventListener = mediaConnection => {
+            mediaConnection.on('stream', stream => {
+                // video要素にカメラ映像をセットして再生
+                const videoElm = document.getElementById('their-video')
+                videoElm.srcObject = stream;
+                videoElm.play();
+            });
+        }
+
+        peer.on('call', mediaConnection => {
+            mediaConnection.answer(localStream);
+            setEventListener(mediaConnection);
+        }); */
+    </script>
+</body>
+
+</html>
