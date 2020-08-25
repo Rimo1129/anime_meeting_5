@@ -1,4 +1,4 @@
-function setupScene(vrm_parent){
+function setupScene(vrm_parent, avatar_name){
   window.renderer = new THREE.WebGLRenderer({
     canvas: document.querySelector('#myCanvas')
   });
@@ -9,7 +9,8 @@ function setupScene(vrm_parent){
   window.scene = new THREE.Scene();
   scene.add(new THREE.DirectionalLight(0xffffff));
   new THREE.GLTFLoader().load(
-    "https://pixiv.github.io/three-vrm/examples/models/three-vrm-girl.vrm",
+    //"https://pixiv.github.io/three-vrm/examples/models/three-vrm-girl.vrm",
+    `${avatar_name}`,
     initVRM, 
     progress => console.log("Loading model...",100.0 * (progress.loaded / progress.total),"%"),
     console.error
@@ -90,11 +91,12 @@ function loading(onoff) {
 }
 
 async function start() {
+  const tmp = document.getElementById("avatar").value;
   const input = document.getElementById("input");
   const output = document.getElementById("output");
   const vrm_parent = document.getElementById("vrm_parent");
   loading(true);
-  setupScene(vrm_parent);
+  setupScene(vrm_parent, tmp);
   await setupCamera(input);
   const model = await facemesh.load({ maxFaces: 1 });
   startRender(input, output, model);
