@@ -20,6 +20,7 @@
     <select id="avatar">
         <option value="models/girl.vrm">girl</option>
         <option value="models/alicia.vrm">alicia</option>
+        <option value="models/shibu.vrm">shibu</option>
     </select>
     <p><button onclick="start()">start</button></p>
     <style>
@@ -29,29 +30,40 @@
             }
         }
     </style>
-        <!-- <p><video id="my-video" width="400px" autoplay muted playsinline></video></p> -->
-        <p id="my-id"></p>
-        <input type="text" placeholder="Join room..." id="js-room-id">
-        <button id="js-join-trigger">Join</button>
-        <button id="js-leave-trigger">Leave</button>
-        <pre class="messages" id="js-messages"></pre>
-        <!-- <textarea id="their-id"></textarea> -->
-        <!-- <button id="make-call">発信</button><br> -->
-        <!-- <video id="their-video" width="320px" autoplay muted playsinline></video> -->
-        <div id="js-videos-container" class="videos-container">
-            <span id="vrm_parent"
-        style="border:solid 1px black;width:320px;height:240px;overflow:hidden;box-sizing:content-box; display:inline-block;"></span>
-        </div>
+    <!-- <p><video id="my-video" width="400px" autoplay muted playsinline></video></p> -->
+    <p id="my-id"></p>
+    <input type="text" placeholder="Join room..." id="js-room-id">
+    <input type = "text" placeholder="Name" id="nickname">
+    <button id="js-join-trigger">Join</button>
+    <button id="js-leave-trigger">Leave</button>
+
+    <!-- ここから変更点 -->
+    <div>
+        <input type="text" id="js-local-text">
+        <button id="js-send-trigger">Send</button>
+    </div>
+    <!-- ここまで変更点 -->
+    <pre class="messages" id="js-messages"></pre>
+
+
+    <!-- <textarea id="their-id"></textarea> -->
+    <!-- <button id="make-call">発信</button><br> -->
+    <!-- <video id="their-video" width="320px" autoplay muted playsinline></video> -->
+    <div id="js-videos-container" class="videos-container">
+        <span id="vrm_parent"
+            style="border:solid 1px black;width:320px;height:240px;overflow:hidden;box-sizing:content-box; display:inline-block;"></span>
+    </div>
     <div class="oneline">
         <video id='input' width="320" height="240" autoplay muted playsinline
             style="border:solid 1px black;box-sizing:content-box;display:inline-block;"></video>
 
         <span style="position:relative;display:inline-block;">
-            <canvas id='output' width="320" height="240" style="border:solid 1px black;box-sizing:content-box;"></canvas>
+            <canvas id='output' width="320" height="240"
+                style="border:solid 1px black;box-sizing:content-box;"></canvas>
             <span id='loadingicon' class="fa fa-spinner fa-spin"
                 style="position:absolute;font-size:100px;top:70px;left: 110px;display:none;"></span>
         </span>
-        <p><canvas id = "myCanvas"></canvas></p>
+        <p><canvas id="myCanvas"></canvas></p>
     </div>
     <script>
         const peer = new Peer({
@@ -78,7 +90,7 @@
                 //     videoElm.srcObject = streamtest;
                 // };
                 var kasoucamera = canvas2.captureStream(15);
-                
+
 
                 //videoElm.srcObject = kasoucamera;
                 // 着信時に相手にカメラ映像を返せるように、グローバル変数に保存しておく
@@ -88,12 +100,12 @@
                 console.error('mediaDevice.getUserMedia() error:', error);
                 return;
             });
-        
+
         // 複数人会議
         // js-local-video→vrm_parent
         const localVideo = document.getElementById('vrm_parent');
         // js-local-id→my-id
-   　　　const localId = document.getElementById('my-id');
+        const localId = document.getElementById('my-id');
         // js-videos-container→
         const videosContainer = document.getElementById('js-videos-container');
 
@@ -101,57 +113,81 @@
         const messages = document.getElementById('js-messages');
         const joinTrigger = document.getElementById('js-join-trigger');
         const leaveTrigger = document.getElementById('js-leave-trigger');
+        //ここ追加
+        const localText = document.getElementById('js-local-text');
+        const sendTrigger = document.getElementById('js-send-trigger');
+        const nickname = document.getElementById('nickname');
+        //ここまで追加
 
         joinTrigger.addEventListener('click', () => {
-        const room = peer.joinRoom(roomId.value, {
-            mode: 'sfu',
-            stream: localStream,
-        });
-
-        room.on('open', () => {
-            messages.textContent += `===You joined===\n`;
-        });
-
-        room.on('peerJoin', peerId => {
-            messages.textContent += `===${peerId} joined===\n`;
-        });
-
-        room.on('stream', async stream => {
-            const remoteVideo = document.createElement('video');
-            remoteVideo.srcObject = stream;
-            remoteVideo.playsInline = true;
-            remoteVideo.setAttribute('data-peer-id', stream.peerId);
-            videosContainer.append(remoteVideo);
-
-            await remoteVideo.play().catch(console.error);
-        });
-
-        room.on('peerLeave', peerId => {
-            const remoteVideo = videosContainer.querySelector(`[data-peer-id="${peerId}"]`);
-            remoteVideo.srcObject.getTracks().forEach(track => {
-                track.stop();
+            const room = peer.joinRoom(roomId.value, {
+                mode: 'sfu',
+                stream: localStream,
             });
-            remoteVideo.srcObject = null;
-            remoteVideo.remove();
 
-            messages.textContent += `===${peerId} left===\n`;
-        });
+            room.on('open', () => {
+                messages.textContent += `===You joined===\n`;
+            });
 
-        room.once('close', () => {
-            messages.textContent += '===You left ===\n';
-            const remoteVideos = videosContainer.querySelectorAll('[data-peer-id]');
-            Array.from(remoteVideos)
-            .forEach(remoteVideo => {
-                remoteVideo.srcObject.getTracks().forEach(track => track.stop());
+            room.on('peerJoin', peerId => {
+                messages.textContent += `===${peerId} joined===\n`;
+            });
+
+            // ここから変更点
+
+            room.on('data', ({ data, src }) => {
+                // Show a message sent to the room and who sent
+                messages.textContent += `${src} ${data}\n`;
+            });
+
+            sendTrigger.addEventListener('click', onClickSend);
+
+            function onClickSend() {
+                // Send message to all of the peers in the room via websocket
+                room.send(`( ${nickname.value}): ${localText.value}`);
+
+                messages.textContent += `${peer.id}(${nickname.value}): ${localText.value}\n`;
+                localText.value = '';
+            }
+
+            // ここまで変更点
+
+            room.on('stream', async stream => {
+                const remoteVideo = document.createElement('video');
+                remoteVideo.srcObject = stream;
+                remoteVideo.playsInline = true;
+                remoteVideo.setAttribute('data-peer-id', stream.peerId);
+                videosContainer.append(remoteVideo);
+
+                await remoteVideo.play().catch(console.error);
+            });
+
+            room.on('peerLeave', peerId => {
+                const remoteVideo = videosContainer.querySelector(`[data-peer-id="${peerId}"]`);
+                remoteVideo.srcObject.getTracks().forEach(track => {
+                    track.stop();
+                });
                 remoteVideo.srcObject = null;
                 remoteVideo.remove();
-              });
-        });
 
-        leaveTrigger.addEventListener('click', () => {
-            room.close();
-        }, { once: true });
-    });
+                messages.textContent += `===${peerId} left===\n`;
+            });
+
+            room.once('close', () => {
+                messages.textContent += '===You left ===\n';
+                const remoteVideos = videosContainer.querySelectorAll('[data-peer-id]');
+                Array.from(remoteVideos)
+                    .forEach(remoteVideo => {
+                        remoteVideo.srcObject.getTracks().forEach(track => track.stop());
+                        remoteVideo.srcObject = null;
+                        remoteVideo.remove();
+                    });
+            });
+
+            leaveTrigger.addEventListener('click', () => {
+                room.close();
+            }, { once: true });
+        });
 
 
         /* /* // 発信処理
@@ -159,7 +195,7 @@
             const theirID = document.getElementById('their-id').value;
             const mediaConnection = peer.call(theirID, localStream);
             setEventListener(mediaConnection);
-        }; 
+        };
 
         // イベントリスナを設置する関数
         const setEventListener = mediaConnection => {
