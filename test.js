@@ -1,4 +1,4 @@
-function setupScene(vrm_parent, avatar_name){
+function setupScene(vrm_parent, avatar_name) {
   window.renderer = new THREE.WebGLRenderer({
     canvas: document.querySelector('#myCanvas')
   });
@@ -11,8 +11,8 @@ function setupScene(vrm_parent, avatar_name){
   new THREE.GLTFLoader().load(
     //"https://pixiv.github.io/three-vrm/examples/models/three-vrm-girl.vrm",
     `${avatar_name}`,
-    initVRM, 
-    progress => console.log("Loading model...",100.0 * (progress.loaded / progress.total),"%"),
+    initVRM,
+    progress => console.log("Loading model...", 100.0 * (progress.loaded / progress.total), "%"),
     console.error
   );
 }
@@ -23,17 +23,32 @@ async function initVRM(gltf) {
   vrm.humanoid.getBoneNode(THREE.VRMSchema.HumanoidBoneName.Hips).rotation.y = Math.PI;
   vrm.humanoid.getBoneNode(THREE.VRMSchema.HumanoidBoneName.LeftUpperArm).rotation.z = Math.PI * 2 / 5;
   vrm.humanoid.getBoneNode(THREE.VRMSchema.HumanoidBoneName.RightUpperArm).rotation.z = -Math.PI * 2 / 5;
-  const head = vrm.humanoid.getBoneNode( THREE.VRMSchema.HumanoidBoneName.Head );
-  camera.position.set( 0.0, head.getWorldPosition(new THREE.Vector3()).y + 0.05, 0.5 );
+  const head = vrm.humanoid.getBoneNode(THREE.VRMSchema.HumanoidBoneName.Head);
+  camera.position.set(0.0, head.getWorldPosition(new THREE.Vector3()).y + 0.05, 0.5);
   window.clock = new THREE.Clock();
   clock.start();
   renderer.render(scene, camera);
 }
 
 async function setupCamera(videoElement) {
-  const constraints = {video: {width: 320,height: 240}, audio: false};
+  const constraints = { video: { width: 320, height: 240 }, audio: true }; // ここ
   const stream = await navigator.mediaDevices.getUserMedia(constraints);
+  let myaudio = stream.getAudioTracks()[0];
   videoElement.srcObject = stream;
+  const canvas2 = document.getElementById("myCanvas");
+  //const myaudio = document.getElementById("my-audio");
+  //myaudio.play()
+  //const videoElm = document.getElementById('my-video');
+  // canvas2.onplay = function(){
+  //     var streamtest = canvas2.captureStream();
+  //     videoElm.srcObject = streamtest;
+  // };
+  var kasoucamera = canvas2.captureStream(15);
+  kasoucamera.addTrack(myaudio);
+
+  //videoElm.srcObject = kasoucamera;
+  // 着信時に相手にカメラ映像を返せるように、グローバル変数に保存しておく
+  localStream = kasoucamera;
   return new Promise(resolve => {
     videoElement.onloadedmetadata = () => {
       videoElement.play();
@@ -74,11 +89,11 @@ function startRender(input, output, model) {
       const q = estimatePose(annotations);
       const head = vrm.humanoid.getBoneNode(THREE.VRMSchema.HumanoidBoneName.Head);
       head.quaternion.slerp(q, 0.1);
-      const blink = Math.max( 0.0, 1.0 - 10.0 * Math.abs( ( clock.getElapsedTime() % 4.0 ) - 2.0 ) );
+      const blink = Math.max(0.0, 1.0 - 10.0 * Math.abs((clock.getElapsedTime() % 4.0) - 2.0));
       vrm.blendShapeProxy.setValue(THREE.VRMSchema.BlendShapePresetName.Blink, blink);
       const lipsLowerInner = annotations.lipsLowerInner[5];
       const lipsUpperInner = annotations.lipsUpperInner[5];
-      const expressionA = Math.max(0, Math.min(1, (lipsLowerInner[1] - lipsUpperInner[1])/10.0));
+      const expressionA = Math.max(0, Math.min(1, (lipsLowerInner[1] - lipsUpperInner[1]) / 10.0));
       vrm.blendShapeProxy.setValue(THREE.VRMSchema.BlendShapePresetName.A, expressionA);
     });
     renderer.render(scene, camera);

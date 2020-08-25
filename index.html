@@ -31,6 +31,7 @@
         }
     </style>
     <!-- <p><video id="my-video" width="400px" autoplay muted playsinline></video></p> -->
+    <audio id="my-audio" autoplay></audio>
     <p id="my-id"></p>
     <input type="text" placeholder="Join room..." id="js-room-id">
     <input type = "text" placeholder="Name" id="nickname">
@@ -77,29 +78,18 @@
 
         let localStream;
 
-        // カメラ映像取得
-        navigator.mediaDevices.getUserMedia({
-            video: true, audio: true
-        })
-            .then(stream => {
-                // 成功時にvideo要素にカメラ映像をセットし、再生
-                const canvas2 = document.getElementById("myCanvas");
-                //const videoElm = document.getElementById('my-video');
-                // canvas2.onplay = function(){
-                //     var streamtest = canvas2.captureStream();
-                //     videoElm.srcObject = streamtest;
-                // };
-                var kasoucamera = canvas2.captureStream(15);
-
-
-                //videoElm.srcObject = kasoucamera;
-                // 着信時に相手にカメラ映像を返せるように、グローバル変数に保存しておく
-                localStream = kasoucamera;
-            }).catch(error => {
-                // 失敗時にはエラーログを出力
-                console.error('mediaDevice.getUserMedia() error:', error);
-                return;
-            });
+        // // カメラ映像取得
+        // navigator.mediaDevices.getUserMedia({
+        //     video: true, audio: false //ここ
+        // })
+        //     .then(stream => {
+        //         // 成功時にvideo要素にカメラ映像をセットし、再生
+                
+        //     }).catch(error => {
+        //         // 失敗時にはエラーログを出力
+        //         console.error('mediaDevice.getUserMedia() error:', error);
+        //         return;
+        //     });
 
         // 複数人会議
         // js-local-video→vrm_parent
