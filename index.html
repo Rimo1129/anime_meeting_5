@@ -2,6 +2,7 @@
 <html lang="ja">
 
 <head>
+    <link rel="stylesheet" type="text/css" href="style.css">
     <meta charset="UTF-8">
     <script src="https://cdn.jsdelivr.net/npm/three@0.116.1/build/three.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/three@0.116.1/examples/js/loaders/GLTFLoader.js"></script>
@@ -13,16 +14,32 @@
     <title>顔認証テスト</title>
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <script src="https://cdn.webrtc.ecl.ntt.com/skyway-latest.js"></script>
+
+    <link href="https://fonts.googleapis.com/css2?family=Raleway&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Kranky&display=swap" rel="stylesheet">
+
+
+
+
+
 </head>
 
 <body>
-    顔認証テスト
+    <h1 id="title-name"><span id="ini">J</span>ACK</h1>
+    <div class="f-item">
+    <h2 class="col">Avatar</h2>
+    <div class="cp_ipselect cp_sl04">
     <select id="avatar">
         <option value="models/girl.vrm">girl</option>
         <option value="models/alicia.vrm">alicia</option>
         <option value="models/shibu.vrm">shibu</option>
+        <option value="models/inkring.vrm">inkring</option>
     </select>
-    <p><button onclick="start()">start</button></p>
+    </div>
+    </div>  
+    <div id=button-align>
+    <button id="button-effect" onclick="start()">Apply</button>
+    </div>
     <style>
         @media screen and (min-width: 644px) {
             .oneline {
@@ -32,15 +49,17 @@
     </style>
     <!-- <p><video id="my-video" width="400px" autoplay muted playsinline></video></p> -->
     <audio id="my-audio" autoplay></audio>
+    <h2 class="col">YourID</h2> 
     <p id="my-id"></p>
+    <h2 class="col">Chat</h2>
     <input type="text" placeholder="Join room..." id="js-room-id">
-    <input type = "text" placeholder="Name" id="nickname">
+    <input type = "text" placeholder="Your Name" id="nickname">
     <button id="js-join-trigger">Join</button>
     <button id="js-leave-trigger">Leave</button>
 
     <!-- ここから変更点 -->
     <div>
-        <input type="text" id="js-local-text">
+        <input type="text" placeholder="Enter the message" id="js-local-text">
         <button id="js-send-trigger">Send</button>
     </div>
     <!-- ここまで変更点 -->
@@ -52,7 +71,7 @@
     <!-- <video id="their-video" width="320px" autoplay muted playsinline></video> -->
     <div id="js-videos-container" class="videos-container">
         <span id="vrm_parent"
-            style="border:solid 1px black;width:320px;height:240px;overflow:hidden;box-sizing:content-box; display:inline-block;"></span>
+            style="border:solid 1px #eb6100;width:320px;height:240px;overflow:hidden;box-sizing:content-box; display:inline-block;"></span>
     </div>
     <div class="oneline">
         <video id='input' width="320" height="240" autoplay muted playsinline
@@ -205,3 +224,4 @@
 </body>
 
 </html>
+
