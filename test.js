@@ -36,13 +36,6 @@ async function setupCamera(videoElement) {
   let myaudio = stream.getAudioTracks()[0];
   videoElement.srcObject = stream;
   const canvas2 = document.getElementById("myCanvas");
-  //const myaudio = document.getElementById("my-audio");
-  //myaudio.play()
-  //const videoElm = document.getElementById('my-video');
-  // canvas2.onplay = function(){
-  //     var streamtest = canvas2.captureStream();
-  //     videoElm.srcObject = streamtest;
-  // };
   var kasoucamera = canvas2.captureStream(15);
   kasoucamera.addTrack(myaudio);
 

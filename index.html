@@ -18,10 +18,6 @@
     <link href="https://fonts.googleapis.com/css2?family=Raleway&display=swap" rel="stylesheet">
     <link href="https://fonts.googleapis.com/css2?family=Kranky&display=swap" rel="stylesheet">
 
-
-
-
-
 </head>
 
 <body>
@@ -47,7 +43,6 @@
             }
         }
     </style>
-    <!-- <p><video id="my-video" width="400px" autoplay muted playsinline></video></p> -->
     <audio id="my-audio" autoplay></audio>
     <h2 class="col">YourID</h2> 
     <p id="my-id"></p>
@@ -96,19 +91,6 @@
         });
 
         let localStream;
-
-        // // カメラ映像取得
-        // navigator.mediaDevices.getUserMedia({
-        //     video: true, audio: false //ここ
-        // })
-        //     .then(stream => {
-        //         // 成功時にvideo要素にカメラ映像をセットし、再生
-                
-        //     }).catch(error => {
-        //         // 失敗時にはエラーログを出力
-        //         console.error('mediaDevice.getUserMedia() error:', error);
-        //         return;
-        //     });
 
         // 複数人会議
         // js-local-video→vrm_parent
@@ -163,6 +145,7 @@
 
             room.on('stream', async stream => {
                 const remoteVideo = document.createElement('video');
+                remoteVideo.style.height =  '240px';
                 remoteVideo.srcObject = stream;
                 remoteVideo.playsInline = true;
                 remoteVideo.setAttribute('data-peer-id', stream.peerId);
@@ -198,28 +181,6 @@
             }, { once: true });
         });
 
-
-        /* /* // 発信処理
-        /* document.getElementById('make-call').onclick = () => {
-            const theirID = document.getElementById('their-id').value;
-            const mediaConnection = peer.call(theirID, localStream);
-            setEventListener(mediaConnection);
-        };
-
-        // イベントリスナを設置する関数
-        const setEventListener = mediaConnection => {
-            mediaConnection.on('stream', stream => {
-                // video要素にカメラ映像をセットして再生
-                const videoElm = document.getElementById('their-video')
-                videoElm.srcObject = stream;
-                videoElm.play();
-            });
-        }
-
-        peer.on('call', mediaConnection => {
-            mediaConnection.answer(localStream);
-            setEventListener(mediaConnection);
-        }); */
     </script>
 </body>
 
